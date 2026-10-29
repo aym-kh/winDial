@@ -1,0 +1,18 @@
+<svg
+  [attr.viewBox]="viewBox"
+  [attr.aria-label]="'WinDial action wheel with ' + sliceCount + ' slices'"
+  role="img"
+>
+  @for (sector of sectors; track sector.index) {
+    <g>
+      <path class="sector-shape" [attr.d]="sector.path" />
+      <text class="sector-label" [attr.x]="sector.labelX" [attr.y]="sector.labelY">
+        {{ sector.index + 1 }}
+      </text>
+    </g>
+  }
+
+  <circle class="hub" cx="300" cy="300" r="72" />
+  <text class="hub-title" x="300" y="294">WINDIAL</text>
+  <text class="hub-subtitle" x="300" y="321">READY</text>
+</svg>
