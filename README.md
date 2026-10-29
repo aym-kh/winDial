@@ -26,6 +26,7 @@ This repository is the active development workspace for the project. The current
 
 - **Desktop shell:** [Tauri v2](https://v2.tauri.app/)
 - **Frontend UI:** [Angular](https://angular.dev/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
 - **Backend logic:** [Rust](https://www.rust-lang.org/)
 - **Target OS:** Windows
 
@@ -57,6 +58,9 @@ npm run tauri build
 - `docs/` — release notes and design RFCs
 - `.ai/roadmap.md` — technical delivery plan for the product
 - `scripts/release.mjs` — release automation helper
+
+Tailwind utility classes are available in Angular templates. Global styles and
+the Tailwind entry point are in `src/styles.css`.
 
 ## Roadmap
 
