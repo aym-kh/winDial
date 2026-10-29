@@ -13,12 +13,14 @@
     "windows": [
       {
         "title": "windial",
-        "width": 800,
-        "height": 600,
+        "width": 500,
+        "height": 500,
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,
-        "resizable": false
+        "resizable": false,
+        "visible": false,
+        "shadow": false
       }
     ],
     "security": {
