@@ -143,16 +143,16 @@ All preferences and custom loadouts are persisted in a local `%APPDATA%/radial-f
 ## 6. Technical Roadmap & Implementation Steps
 
 ### Phase 1: Engine Core (Rust & Tauri Setup)
-* [ ] Setup Tauri v2 project with Angular frontend template.
-* [ ] Implement global hotkey registration (e.g., `Alt + Right Click` or `Win + Z`).
-* [ ] Configure transparent, borderless, always-on-top window positioning at mouse cursor coordinates.
+* [x] Setup Tauri v2 project with Angular frontend template.
+* [x] Implement global hotkey registration (e.g., `Alt + Right Click` or `Win + Z`).
+* [x] Configure transparent, borderless, always-on-top window positioning at mouse cursor coordinates.
 * [ ] Rust IPC command to detect the active window process name (e.g., `code.exe`, `explorer.exe`).
 
 ### Phase 2: Frontend Wheel Math & UI Engine
-* [ ] Build dynamic SVG wedge generator in Angular based on wedge count ($N$ slices).
-* [ ] Implement trigonometric hover detection ($\theta = \text{atan2}(y, x)$) relative to dead-zone radius.
+* [x] Build dynamic SVG wedge generator in Angular based on wedge count ($N$ slices).
+* [x] Implement trigonometric hover detection ($\theta = \text{atan2}(y, x)$) relative to dead-zone radius.
 * [ ] Add basic open/close enter-and-exit animations.
-* [ ] Implement active slice highlight states and sound effect triggers.
+* [x] Implement active slice highlight states and sound effect triggers.
 
 ### Phase 3: Action Execution System
 * [ ] Build action dispatch system in Rust:

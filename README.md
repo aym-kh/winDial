@@ -6,6 +6,8 @@ WinDial is a Windows desktop utility for fast, gesture-driven actions. Instead o
 
 This repository is the active development workspace for the project. The current codebase is an early-stage Tauri + Angular + Rust application that establishes the desktop shell, overlay window, and the architecture described in the roadmap.
 
+Hold **Alt+RightClick** to show the overlay at the cursor; release the right mouse button to hide it. The initial wheel has eight numbered placeholder sectors. Moving between sectors highlights the active one and plays a soft tick.
+
 ## Status
 
 - Early alpha / active development
@@ -80,3 +82,7 @@ Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) befo
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
+
+## Sound credits
+
+The wheel tick is a sound effect by [Turning Pages](https://pixabay.com/users/turning_pages-50915814/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=608625) from [Pixabay](https://pixabay.com/sound-effects//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=608625).
