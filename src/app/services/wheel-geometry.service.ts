@@ -3,6 +3,36 @@ import type { WheelSector } from "../types";
 
 @Injectable({ providedIn: "root" })
 export class WheelGeometryService {
+  getSliceAtPointer(
+    deltaX: number,
+    deltaY: number,
+    sliceCount: number,
+    deadZoneRadius: number,
+    outerRadius: number,
+  ): number | null {
+    if (!Number.isInteger(sliceCount) || sliceCount < 1) {
+      throw new RangeError("Slice count must be a positive integer");
+    }
+
+    if (
+      ![deltaX, deltaY, deadZoneRadius, outerRadius].every(Number.isFinite) ||
+      deadZoneRadius < 0 ||
+      outerRadius <= deadZoneRadius
+    ) {
+      throw new RangeError("Pointer coordinates and wheel radii must be valid");
+    }
+
+    const distance = Math.hypot(deltaX, deltaY);
+    if (distance < deadZoneRadius || distance > outerRadius) {
+      return null;
+    }
+
+    const angleFromTop =
+      (Math.atan2(deltaY, deltaX) * (180 / Math.PI) + 450) % 360;
+
+    return Math.floor(angleFromTop / (360 / sliceCount));
+  }
+
   createSectors(
     sliceCount: number,
     centerX: number,

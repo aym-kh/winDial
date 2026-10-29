@@ -17,6 +17,16 @@ svg {
   fill: rgb(15 23 42 / 88%);
   stroke: rgb(148 163 184 / 38%);
   stroke-width: 2;
+  transition:
+    fill 100ms ease-out,
+    stroke 100ms ease-out,
+    filter 100ms ease-out;
+}
+
+.sector-shape.active {
+  fill: rgb(8 145 178 / 88%);
+  stroke: rgb(103 232 249 / 95%);
+  filter: drop-shadow(0 0 12px rgb(34 211 238 / 65%));
 }
 
 .sector-label,
