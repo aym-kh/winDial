@@ -1,5 +1,13 @@
 @if (config; as wheelConfig) {
-<app-wheel [items]="wheelConfig.root.slices" (activeSliceChange)="activeSlice = $event" />
+<app-wheel
+  [items]="wheelConfig.root.slices"
+  (activeSliceChange)="activeSlice = $event"
+  (sliceRelease)="onSliceRelease($event)"
+/>
+}
+
+@if (browserPreview) {
+<div class="preview-badge">BROWSER PREVIEW <span>·</span> Click Settings to edit</div>
 }
 
 @if (errorMessage) {

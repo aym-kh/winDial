@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "root": {
+    "slices": [
+      {
+        "id": "action-1",
+        "label": "Browser",
+        "kind": "action",
+        "actionType": "none"
+      },
+      {
+        "id": "action-2",
+        "label": "Terminal",
+        "kind": "action",
+        "actionType": "none"
+      },
+      {
+        "id": "action-3",
+        "label": "Files",
+        "kind": "action",
+        "actionType": "none"
+      },
+      {
+        "id": "action-4",
+        "label": "Editor",
+        "kind": "action",
+        "actionType": "none"
+      },
+      {
+        "id": "action-5",
+        "label": "Copy",
+        "kind": "action",
+        "actionType": "none"
+      },
+      {
+        "id": "action-6",
+        "label": "Paste",
+        "kind": "action",
+        "actionType": "none"
+      },
+      {
+        "id": "action-7",
+        "label": "Desktop",
+        "kind": "action",
+        "actionType": "none"
+      },
+      {
+        "id": "action-8",
+        "label": "Task View",
+        "kind": "action",
+        "actionType": "none"
+      },
+      {
+        "id": "settings",
+        "label": "Settings",
+        "kind": "settings",
+        "actionType": "none"
+      }
+    ]
+  }
+}

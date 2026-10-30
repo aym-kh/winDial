@@ -42,31 +42,11 @@ struct WheelSlice {
 }
 
 fn default_wheel_config() -> WheelConfig {
-    let labels = [
-        "Browser",
-        "Terminal",
-        "Files",
-        "Editor",
-        "Copy",
-        "Paste",
-        "Desktop",
-        "Task View",
-    ];
-    let mut root = WheelLevel {
-        slices: labels
-            .iter()
-            .enumerate()
-            .map(|(index, label)| WheelSlice {
-                id: format!("action-{}", index + 1),
-                label: (*label).to_string(),
-                kind: WheelSliceKind::Action,
-                action_type: WheelActionType::None,
-                children: None,
-            })
-            .collect(),
-    };
-    ensure_settings_slice(&mut root);
-    WheelConfig { version: 1, root }
+    let mut config: WheelConfig =
+        serde_json::from_str(include_str!("../../src/assets/default-wheel-config.json"))
+            .expect("Bundled default wheel configuration must be valid");
+    ensure_settings_slice(&mut config.root);
+    config
 }
 
 fn ensure_settings_slice(level: &mut WheelLevel) {

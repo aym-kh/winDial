@@ -2,7 +2,7 @@
     activeSlice === null
       ? 'WinDial action wheel with ' + items.length + ' slices'
       : getSlice(activeSlice).label + ' selected'
-  " role="img" (pointermove)="onPointerMove($event)" (pointerleave)="onPointerLeave()">
+  " role="img" (pointermove)="onPointerMove($event)" (pointerleave)="onPointerLeave()" (pointerup)="onPointerUp()">
   @for (sector of sectors; track sector.index) {
   @let item = getSlice(sector.index);
   <g>

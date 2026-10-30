@@ -18,6 +18,7 @@ export class WheelComponent implements OnChanges {
   sectors: WheelSector[] = [];
   readonly viewBox = "0 0 600 600";
   activeSliceChange = output<WheelSlice | null>();
+  sliceRelease = output<WheelSlice | null>();
   activeSlice: number | null = null;
 
   private readonly geometry = inject(WheelGeometryService);
@@ -60,6 +61,12 @@ export class WheelComponent implements OnChanges {
 
   onPointerLeave(): void {
     this.setActiveSlice(null);
+  }
+
+  onPointerUp(): void {
+    this.sliceRelease.emit(
+      this.activeSlice === null ? null : this.items[this.activeSlice] ?? null,
+    );
   }
 
   private setActiveSlice(index: number | null): void {
