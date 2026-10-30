@@ -1,1 +1,12 @@
-<app-wheel [sliceCount]="10" />
+@if (config; as wheelConfig) {
+<app-wheel [items]="wheelConfig.root.slices" (activeSliceChange)="activeSlice = $event" />
+}
+
+@if (errorMessage) {
+<p class="error-message" role="alert">{{ errorMessage }}</p>
+}
+
+@if (config; as wheelConfig) {
+<app-settings-dialog [config]="wheelConfig" [open]="settingsOpen" (save)="saveConfig($event)"
+  (close)="closeSettings()" />
+}

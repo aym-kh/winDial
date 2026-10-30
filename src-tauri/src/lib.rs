@@ -1,5 +1,151 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+use serde::{Deserialize, Serialize};
 use tauri::Manager;
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WheelConfig {
+    version: u8,
+    root: WheelLevel,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+struct WheelLevel {
+    slices: Vec<WheelSlice>,
+}
+
+#[derive(Clone, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+enum WheelSliceKind {
+    Action,
+    Settings,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum WheelActionType {
+    None,
+    LaunchProcess,
+    OpenUrl,
+    Hotkey,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WheelSlice {
+    id: String,
+    label: String,
+    kind: WheelSliceKind,
+    action_type: WheelActionType,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    children: Option<WheelLevel>,
+}
+
+fn default_wheel_config() -> WheelConfig {
+    let labels = [
+        "Browser",
+        "Terminal",
+        "Files",
+        "Editor",
+        "Copy",
+        "Paste",
+        "Desktop",
+        "Task View",
+    ];
+    let mut root = WheelLevel {
+        slices: labels
+            .iter()
+            .enumerate()
+            .map(|(index, label)| WheelSlice {
+                id: format!("action-{}", index + 1),
+                label: (*label).to_string(),
+                kind: WheelSliceKind::Action,
+                action_type: WheelActionType::None,
+                children: None,
+            })
+            .collect(),
+    };
+    ensure_settings_slice(&mut root);
+    WheelConfig { version: 1, root }
+}
+
+fn ensure_settings_slice(level: &mut WheelLevel) {
+    for slice in &mut level.slices {
+        if let Some(children) = &mut slice.children {
+            ensure_settings_slice(children);
+        }
+    }
+
+    level
+        .slices
+        .retain(|slice| slice.kind != WheelSliceKind::Settings);
+    level.slices.push(WheelSlice {
+        id: "settings".to_string(),
+        label: "Settings".to_string(),
+        kind: WheelSliceKind::Settings,
+        action_type: WheelActionType::None,
+        children: None,
+    });
+}
+
+fn wheel_config_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
+    app.path()
+        .app_config_dir()
+        .map(|directory| directory.join("config.json"))
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+fn load_wheel_config(app: tauri::AppHandle) -> Result<WheelConfig, String> {
+    let path = wheel_config_path(&app)?;
+    if !path.exists() {
+        let config = default_wheel_config();
+        let json = serde_json::to_string_pretty(&config).map_err(|error| error.to_string())?;
+        std::fs::create_dir_all(
+            path.parent()
+                .ok_or_else(|| "Wheel configuration path has no parent directory".to_string())?,
+        )
+        .map_err(|error| error.to_string())?;
+        std::fs::write(&path, json).map_err(|error| error.to_string())?;
+        return Ok(config);
+    }
+
+    let contents = std::fs::read_to_string(&path).map_err(|error| error.to_string())?;
+    let mut config: WheelConfig =
+        serde_json::from_str(&contents).map_err(|error| error.to_string())?;
+    if config.version != 1 {
+        return Err(format!(
+            "Unsupported wheel configuration version: {}",
+            config.version
+        ));
+    }
+    let original = serde_json::to_string(&config).map_err(|error| error.to_string())?;
+    ensure_settings_slice(&mut config.root);
+    let normalized = serde_json::to_string_pretty(&config).map_err(|error| error.to_string())?;
+    if original != serde_json::to_string(&config).map_err(|error| error.to_string())? {
+        std::fs::write(path, normalized).map_err(|error| error.to_string())?;
+    }
+    Ok(config)
+}
+
+#[tauri::command]
+fn save_wheel_config(app: tauri::AppHandle, mut config: WheelConfig) -> Result<(), String> {
+    if config.version != 1 {
+        return Err(format!(
+            "Unsupported wheel configuration version: {}",
+            config.version
+        ));
+    }
+    ensure_settings_slice(&mut config.root);
+    let path = wheel_config_path(&app)?;
+    std::fs::create_dir_all(
+        path.parent()
+            .ok_or_else(|| "Wheel configuration path has no parent directory".to_string())?,
+    )
+    .map_err(|error| error.to_string())?;
+    let json = serde_json::to_string_pretty(&config).map_err(|error| error.to_string())?;
+    std::fs::write(path, json).map_err(|error| error.to_string())
+}
 
 #[cfg(windows)]
 mod mouse_hook {
@@ -8,7 +154,7 @@ mod mouse_hook {
         atomic::{AtomicBool, Ordering},
     };
 
-    use tauri::{AppHandle, Manager, PhysicalPosition};
+    use tauri::{AppHandle, Emitter, Manager, PhysicalPosition};
     use windows_sys::Win32::{
         System::LibraryLoader::GetModuleHandleW,
         UI::{
@@ -73,7 +219,7 @@ mod mouse_hook {
             }
 
             if message == WM_RBUTTONUP as usize && ACTIVATION_HELD.swap(false, Ordering::SeqCst) {
-                hide_overlay();
+                release_wheel();
                 return 1;
             }
         }
@@ -111,24 +257,14 @@ mod mouse_hook {
         }
     }
 
-    fn hide_overlay() {
+    fn release_wheel() {
         let Some(app) = APP_HANDLE.get().cloned() else {
-            eprintln!("Cannot hide overlay: Tauri app handle is unavailable");
+            eprintln!("Cannot release wheel: Tauri app handle is unavailable");
             return;
         };
 
-        let window_app = app.clone();
-        if let Err(error) = app.run_on_main_thread(move || {
-            let result = window_app
-                .get_webview_window("main")
-                .ok_or_else(|| "Main window not found".to_string())
-                .and_then(|window| window.hide().map_err(|error| error.to_string()));
-
-            if let Err(error) = result {
-                eprintln!("Failed to hide overlay: {error}");
-            }
-        }) {
-            eprintln!("Failed to schedule overlay hide: {error}");
+        if let Err(error) = app.emit("wheel-release", ()) {
+            eprintln!("Failed to notify frontend about wheel release: {error}");
         }
     }
 }
@@ -158,7 +294,13 @@ fn hide_window(app: tauri::AppHandle) -> Result<(), String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, show_window, hide_window])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            show_window,
+            hide_window,
+            load_wheel_config,
+            save_wheel_config
+        ])
         .setup(|app| {
             #[cfg(windows)]
             mouse_hook::install(app)?;
@@ -167,4 +309,68 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn settings_slice_is_present_once_at_each_level() {
+        let nested = WheelLevel {
+            slices: vec![WheelSlice {
+                id: "nested-settings-old".to_string(),
+                label: "Old settings".to_string(),
+                kind: WheelSliceKind::Settings,
+                action_type: WheelActionType::None,
+                children: None,
+            }],
+        };
+        let mut root = WheelLevel {
+            slices: vec![
+                WheelSlice {
+                    id: "group".to_string(),
+                    label: "Group".to_string(),
+                    kind: WheelSliceKind::Action,
+                    action_type: WheelActionType::None,
+                    children: Some(nested),
+                },
+                WheelSlice {
+                    id: "settings-a".to_string(),
+                    label: "Settings".to_string(),
+                    kind: WheelSliceKind::Settings,
+                    action_type: WheelActionType::None,
+                    children: None,
+                },
+                WheelSlice {
+                    id: "settings-b".to_string(),
+                    label: "Settings".to_string(),
+                    kind: WheelSliceKind::Settings,
+                    action_type: WheelActionType::None,
+                    children: None,
+                },
+            ],
+        };
+
+        ensure_settings_slice(&mut root);
+
+        let root_settings: Vec<_> = root
+            .slices
+            .iter()
+            .filter(|slice| slice.kind == WheelSliceKind::Settings)
+            .collect();
+        let child_settings: Vec<_> = root.slices[0]
+            .children
+            .as_ref()
+            .unwrap()
+            .slices
+            .iter()
+            .filter(|slice| slice.kind == WheelSliceKind::Settings)
+            .collect();
+
+        assert_eq!(root_settings.len(), 1);
+        assert_eq!(child_settings.len(), 1);
+        assert_eq!(root_settings[0].id, "settings");
+        assert_eq!(child_settings[0].id, "settings");
+    }
 }

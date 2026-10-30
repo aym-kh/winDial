@@ -1,0 +1,44 @@
+@if (open && draft; as wheelConfig) {
+<div class="dialog-backdrop">
+  <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <header class="dialog-header">
+      <div>
+        <p class="eyebrow">WHEEL CONFIGURATION</p>
+        <h1 id="settings-title">Settings</h1>
+      </div>
+      <button class="close-button" type="button" aria-label="Close settings" (click)="closeDialog()">×</button>
+    </header>
+
+    <p class="dialog-description">Edit the labels and action types shown on your wheel.</p>
+
+    <form (ngSubmit)="saveChanges()">
+      <div class="slice-list">
+        @for (slice of wheelConfig.root.slices; track slice.id) {
+        @if (slice.kind === "action") {
+        <div class="slice-row">
+          <label>
+            <span>Label</span>
+            <input [(ngModel)]="slice.label" [name]="'label-' + slice.id" maxlength="24" required />
+          </label>
+          <label>
+            <span>Action type</span>
+            <select [(ngModel)]="slice.actionType" [name]="'action-' + slice.id">
+              <option value="none">Not configured</option>
+              <option value="launch_process">Launch app</option>
+              <option value="open_url">Open URL</option>
+              <option value="hotkey">Keyboard shortcut</option>
+            </select>
+          </label>
+        </div>
+        }
+        }
+      </div>
+
+      <footer class="dialog-footer">
+        <button class="secondary-button" type="button" (click)="closeDialog()">Close</button>
+        <button class="save-button" type="submit">Save changes</button>
+      </footer>
+    </form>
+  </section>
+</div>
+}

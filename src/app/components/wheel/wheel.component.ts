@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges, inject, output, } from "@angular/core";
-import { WheelGeometryService } from "../services/wheel-geometry.service";
-import { AudioFeedbackService } from "../services/audio-feedback.service";
-import type { WheelSector } from "../types";
+import { WheelGeometryService } from "../../services/wheel-geometry.service";
+import { AudioFeedbackService } from "../../services/audio-feedback.service";
+import type { WheelSector, WheelSlice } from "../../types";
 
 const CENTER = 300;
 const OUTER_RADIUS = 276;
@@ -12,21 +12,21 @@ const OUTER_RADIUS = 276;
   styleUrl: "./wheel.component.css",
 })
 export class WheelComponent implements OnChanges {
-  @Input() sliceCount = 8;
+  @Input() items: WheelSlice[] = [];
   @Input() deadZoneRadius = 102;
 
   sectors: WheelSector[] = [];
   readonly viewBox = "0 0 600 600";
-  activeSliceChange = output<number | null>();
+  activeSliceChange = output<WheelSlice | null>();
   activeSlice: number | null = null;
 
   private readonly geometry = inject(WheelGeometryService);
   private readonly audioFeedback = inject(AudioFeedbackService);
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes["sliceCount"]) {
+    if (changes["items"]) {
       this.sectors = this.geometry.createSectors(
-        this.sliceCount,
+        this.items.length,
         CENTER,
         CENTER,
         102,
@@ -51,7 +51,7 @@ export class WheelComponent implements OnChanges {
       this.geometry.getSliceAtPointer(
         pointerX - CENTER,
         pointerY - CENTER,
-        this.sliceCount,
+        this.items.length,
         this.deadZoneRadius,
         OUTER_RADIUS,
       ),
@@ -62,9 +62,10 @@ export class WheelComponent implements OnChanges {
     this.setActiveSlice(null);
   }
 
-  private setActiveSlice(slice: number | null): void {
-    if (slice !== this.activeSlice) {
-      this.activeSlice = slice;
+  private setActiveSlice(index: number | null): void {
+    const slice = index === null ? null : this.items[index] ?? null;
+    if (index !== this.activeSlice) {
+      this.activeSlice = index;
       this.activeSliceChange.emit(slice);
       if (slice !== null) {
         this.audioFeedback.playHoverTick();
@@ -72,9 +73,15 @@ export class WheelComponent implements OnChanges {
     }
   }
 
+  getSlice(index: number): WheelSlice {
+    return this.items[index];
+  }
+
   get hubLabel(): string {
-    return this.activeSlice === null
-      ? "READY"
-      : `SLICE ${this.activeSlice + 1}`;
+    if (this.activeSlice === null) {
+      return "READY";
+    }
+
+    return this.items[this.activeSlice]?.label ?? "READY";
   }
 }

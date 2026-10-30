@@ -1,13 +1,16 @@
 <svg [attr.viewBox]="viewBox" [attr.aria-label]="
     activeSlice === null
-      ? 'WinDial action wheel with ' + sliceCount + ' slices'
-      : 'Slice ' + (activeSlice + 1) + ' selected'
+      ? 'WinDial action wheel with ' + items.length + ' slices'
+      : getSlice(activeSlice).label + ' selected'
   " role="img" (pointermove)="onPointerMove($event)" (pointerleave)="onPointerLeave()">
   @for (sector of sectors; track sector.index) {
+  @let item = getSlice(sector.index);
   <g>
-    <path class="sector-shape" [class.active]="activeSlice === sector.index" [attr.d]="sector.path" />
+    <path class="sector-shape" [class.active]="activeSlice === sector.index" [attr.d]="sector.path">
+      <title>{{ item.label }} · {{ item.actionType }}</title>
+    </path>
     <text class="sector-label" [attr.x]="sector.labelX" [attr.y]="sector.labelY">
-      {{ sector.index + 1 }}
+      {{ item.label }}
     </text>
   </g>
   }
